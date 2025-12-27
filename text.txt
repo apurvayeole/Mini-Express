@@ -1,0 +1,86 @@
+Build a mini express server
+Objectives:
+Routing
+Middleware chaining
+Error propagation
+Centralized error handling
+Async error safety
+Crash prevention
+
+MINI_EXPRESS:
+Mini-Express is a minimal HTTP server framework built from scratch using Node.js core modules only.
+The purpose of this project is not to replace Express, but to understand how Express actually works internally.
+
+How Request Flow Works:
+1. Normal Request(No Error):
+Request
+ → middleware[0]
+ → middleware[1]
+ → ...
+ → route handler
+ → response
+next() means:
+“Everything is fine, continue execution.”
+2.Error Request Flow:
+Request
+ → middleware
+ → ERROR occurs
+ → next(err)
+ → error middleware
+ → response
+Once next(err) is called:
+Normal middleware stops
+Routes are skipped
+Only error middleware runs
+
+Important Concepts:
+
+1. What is a handler?
+A function that decides how to respond to a matched route.
+(req, res) => { ... }
+
+2. When does a server crash?
+A Node.js server crashes when:
+An error is not caught
+A promise rejection is unhandled
+Handled errors = response
+Unhandled errors = process exit
+
+3. Why error middleware felt “invisible”
+Because error middleware:
+Only runs when an error happens
+Does nothing during normal requests
+Like a fire extinguisher — invisible until needed.
+
+4. Middleware order matters (CRITICAL)
+Execution order = registration order
+If middleware is registered after routes, it will never run before them.
+This explains:
+Why auth middleware must be placed first
+Why body parsers must come before routes
+Why misordering causes bugs and security issues
+
+5. Why route error appeared before middleware error
+Because:
+The route was registered after middleware
+The middleware did not throw
+The route threw first
+Once middleware was moved above the route, middleware error appeared first.
+
+6. How async errors are handled
+Async handlers return promises.
+This line prevents crashes:
+result.catch(next);
+Without this → unhandled rejection → server crash.
+
+7. Why res.writableEnded is checked
+Prevents:
+ERR_STREAM_WRITE_AFTER_END
+This happens when code tries to write to a response that is already closed.
+
+What This Project Represents
+This project demonstrates:
+Framework-level understanding
+Control over execution flow
+Understanding of failure scenarios
+Ability to build systems, not just apps
